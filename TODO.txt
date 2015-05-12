@@ -1,0 +1,13 @@
+drawing garden
+drawing plants
+make plants grow
+click to plant - lock to grid
+click to harvest
+random plant queue
+make harvest group - logic based on type
+add scoring / joy meter
+
+add ladybug
+
+juice - joy particles from harvesting
+add 2x2 sized plants?
