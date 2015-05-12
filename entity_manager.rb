@@ -82,19 +82,24 @@ class EntityManager
     match
   end
 
-  def entities_with_all_components(*components, &block)
-    raise "No block give" unless block_given?
-
-    first_component_ids = @component_store[components.first].keys
-    ent_ids = components.inject(first_component_ids) do |comp_ids, comp|
-      comp_ids &= @component_store[comp].keys
-    end
-
-    ent_ids.each do |ent_id|
-      yield *components.map{|comp| @component_store[comp][ent_id]}, ent_id
-    end
+  def find_by_id(ent_id, *queries, &block)
+    _queries = queries.map{|q| q.is_a?(Symbol) ? {type: q} : q}
+    _query_entities(queries, ent_id, [], &block)
   end
 
+#   def entities_with_all_components(*components, &block)
+#     raise "No block give" unless block_given?
+#
+#     first_component_ids = @component_store[components.first].keys
+#     ent_ids = components.inject(first_component_ids) do |comp_ids, comp|
+#       comp_ids &= @component_store[comp].keys
+#     end
+#
+#     ent_ids.each do |ent_id|
+#       yield *components.map{|comp| @component_store[comp][ent_id]}, ent_id
+#     end
+#   end
+#
   def add_component(component, opts={})
     target_entity = opts[:to]
     @component_store[component.type][target_entity] << component

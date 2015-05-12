@@ -45,11 +45,37 @@ class ClickableComponent
   end
 end
 
+
 class PlantableComponent
   attr_accessor :plant, :type
   def initialize(plant = nil)
     @type = :plantable
     @plant = plant
+  end
+end
+
+class SeedGeneratorComponent
+  attr_accessor :size, :seeds, :type
+  def initialize(size = 3)
+    @type = :seed_generator
+    @size = size
+    @seeds = []
+  end
+end
+
+class SeedDefinitionComponent
+  attr_accessor :definition, :type
+  def initialize(seed_def)
+    @type = :seed_definition
+    @definition = seed_def
+  end
+end
+
+class PointsComponent
+  attr_accessor :points, :type
+  def initialize(points)
+    @type = :points
+    @points = points
   end
 end
 

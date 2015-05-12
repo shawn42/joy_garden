@@ -15,13 +15,63 @@ end
 
 class PlanterSystem
   def update(entity_manager, dt, input)
+    seed_gen = nil
+    entity_manager.query_entities :seed_generator do |gen, ent_id|
+      # puts "hijacking scope for missing manager method... fix me"
+      seed_gen = gen
+    end
+
     entity_manager.query_entities :clickable, :position, :plantable do |clickable, pos, plantable, ent_id|
       if clickable.clicked && plantable.plant.nil?
-        plantable.plant = Prefab.plant entity_manager: entity_manager,
-          x: pos.x, y: pos.y, color: Prefab::PLANT_COLORS.sample
+        seed_id = seed_gen.seeds.pop
+        entity_manager.find_by_id seed_id, :seed_definition do |seed_def_comp, ent_id|
+          seed_def = seed_def_comp.definition
+          plantable.plant = Prefab.plant entity_manager: entity_manager,
+            x: pos.x, y: pos.y, color: seed_def[:color], mature_age: seed_def[:mature_age], 
+            growth_speed: seed_def[:growth_speed], points: seed_def[:points]
+        end
+
+        entity_manager.remove_entity seed_id
+      end
+    end
+  end
+end
+
+class SeedGeneratorSystem
+  SEED_HEIGHT = 14
+  def update(entity_manager, dt, input)
+    seeds_added = 0
+
+    entity_manager.query_entities :seed_generator, :position do |gen, pos, ent_id|
+      target_size = gen.size
+      num_seeds = gen.seeds.size 
+
+      if num_seeds < target_size
+        (target_size - num_seeds).times do |i|
+          seed_def = generate_seed_definition
+          gen.seeds.unshift Prefab.seed(entity_manager: entity_manager,
+                                  seed_definition: seed_def, 
+                                  x: pos.x, y: pos.y - (SEED_HEIGHT+1)*2*i,
+                                  w: SEED_HEIGHT, h: SEED_HEIGHT)
+          seeds_added += 1
+        end
       end
     end
 
+    entity_manager.query_entities :seed_definition, :position do |seed_def, pos, ent_id|
+      pos.y += seeds_added*(SEED_HEIGHT+1)*2
+    end
+  end
+
+  private
+  SEED_DEFS = [
+    { color: Prefab::PLANT_COLORS[0], growth_speed: 4, mature_age: 4, points: 1 },
+    { color: Prefab::PLANT_COLORS[1], growth_speed: 3, mature_age: 4, points: 2 },
+    { color: Prefab::PLANT_COLORS[2], growth_speed: 2, mature_age: 4, points: 3 },
+    { color: Prefab::PLANT_COLORS[3], growth_speed: 1, mature_age: 5, points: 5 },
+  ]
+  def generate_seed_definition
+    SEED_DEFS.sample
   end
 end
 

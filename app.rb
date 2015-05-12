@@ -4,46 +4,10 @@ require 'set'
 require 'pry'
 
 require_relative 'components'
+require_relative 'prefab'
 require_relative 'systems'
 require_relative 'entity_manager'
 require_relative 'input_cacher'
-
-module Prefab
-  include Gosu
-  PLANT_COLORS = [Color::AQUA,Color::BLUE,Color::CYAN,Color::FUCHSIA,Color::GRAY,Color::GREEN,Color::RED,Color::WHITE,Color::YELLOW]
-  def self.garden(entity_manager)
-    brown = Color.rgba(139,69,19,255)
-    6.times do |c|
-      10.times do |r|
-        Prefab.plot entity_manager: entity_manager,
-          x: 20 + c * 25, y: 20 + r * 25, color: brown
-        # Prefab.plant entity_manager: entity_manager,
-        #   x: 20 + c * 25, y: 20 + r * 25, color: PLANT_COLORS.sample
-      end
-    end
-  end
-
-  def self.plant(entity_manager:, x:,y:,color:)
-    plant = entity_manager.create
-    entity_manager.add_component ColorComponent.new(color), to: plant
-    entity_manager.add_component BoxedComponent.new(1, 1), to: plant
-    entity_manager.add_component PositionComponent.new(x, y), to: plant
-    entity_manager.add_component GrowthComponent.new(1..5, 1_000, 2), to: plant
-    entity_manager.add_component TimerComponent.new(:aged, 1_000, false, AgedEvent), to: plant
-    plant
-  end
-
-  def self.plot(entity_manager:, x:,y:,color:)
-    plot = entity_manager.create
-    entity_manager.add_component ColorComponent.new(color), to: plot
-    entity_manager.add_component BoxedComponent.new(11, 11), to: plot
-    entity_manager.add_component PositionComponent.new(x, y), to: plot
-    entity_manager.add_component ClickableComponent.new, to: plot
-    entity_manager.add_component PlantableComponent.new, to: plot
-    plot
-  end
-
-end
 
 class JoyGarden < Gosu::Window
   MAX_UPDATE_SIZE_IN_MILLIS = 500
@@ -55,8 +19,7 @@ class JoyGarden < Gosu::Window
     build_systems
 
     Prefab.garden @entity_manager
-    # Prefab.plant_dispensor @entity_manager
-
+    Prefab.seed_generator entity_manager: @entity_manager, x: 200, y: 100
   end
 
   def needs_cursor?
@@ -69,6 +32,7 @@ class JoyGarden < Gosu::Window
     @timer_system = TimerSystem.new
     @growth_system = GrowthSystem.new
     @planter_system = PlanterSystem.new
+    @seed_generator_system = SeedGeneratorSystem.new
     @render_system = RenderSystem.new
   end
 
@@ -90,6 +54,7 @@ class JoyGarden < Gosu::Window
       @timer_system.update @entity_manager, delta, input_snapshot
       @growth_system.update @entity_manager, delta, input_snapshot
       @planter_system.update @entity_manager, delta, input_snapshot
+      @seed_generator_system.update @entity_manager, delta, input_snapshot
 
       @entity_manager.clear_events
     end
