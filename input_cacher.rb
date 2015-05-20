@@ -20,7 +20,7 @@ class InputCacher
   end
 
   def snapshot
-    InputCacher.new(@down_ids.dup, @mouse_pos.dup)
+    InputCacher.new(@down_ids.dup, @mouse_pos.dup).freeze
   end
 end
 

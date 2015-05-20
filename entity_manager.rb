@@ -23,6 +23,11 @@ class EntityManager
     add_component(event, to: target_entity)
   end
 
+  def consume_event(event, opts)
+    @events.delete event
+    remove_component(event, opts)
+  end
+
   def clear_events
     @events.each do |entity, events|
       events.each do |event|
@@ -101,12 +106,14 @@ class EntityManager
 #   end
 #
   def add_component(component, opts={})
+    # puts "adding component #{component.type} to #{opts[:to]}" if component.type == :plot
     target_entity = opts[:to]
     @component_store[component.type][target_entity] << component
     self
   end
 
   def remove_component(component, opts={})
+    # puts "removing component #{component.type} from #{opts[:from]}"
     target_entity = opts[:from]
     @component_store[component.type][target_entity].delete(component) if @component_store[component.type][target_entity]
     self
@@ -117,5 +124,13 @@ class EntityManager
       entity_hash.delete entity
     end
     self
+  end
+
+  def inspect_entity(ent_id)
+    entity = [ent_id]
+    @component_store.each do |comp_type, entity_hash|
+      entity << entity_hash[ent_id].to_a
+    end
+    entity.flatten
   end
 end

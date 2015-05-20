@@ -13,6 +13,7 @@ class GrowthSystem
   end
 end
 
+
 class PlanterSystem
   def update(entity_manager, dt, input)
     seed_gen = nil
@@ -21,18 +22,19 @@ class PlanterSystem
       seed_gen = gen
     end
 
-    entity_manager.query_entities :clickable, :position, :plantable do |clickable, pos, plantable, ent_id|
-      if clickable.clicked && plantable.plant.nil?
-        seed_id = seed_gen.seeds.pop
-        entity_manager.find_by_id seed_id, :seed_definition do |seed_def_comp, ent_id|
-          seed_def = seed_def_comp.definition
-          plantable.plant = Prefab.plant entity_manager: entity_manager,
-            x: pos.x, y: pos.y, color: seed_def[:color], mature_age: seed_def[:mature_age], 
-            growth_speed: seed_def[:growth_speed], points: seed_def[:points]
-        end
-
-        entity_manager.remove_entity seed_id
+    entity_manager.query_entities :clicked, :plot, :position, :plantable do |clicked, plot, pos, plantable, ent_id|
+      entity_manager.consume_event clicked, from: ent_id
+      seed_id = seed_gen.seeds.pop
+      entity_manager.find_by_id seed_id, :seed_definition do |seed_def_comp, seed_ent_id|
+        seed_def = seed_def_comp.definition
+        plot.plant = Prefab.plant entity_manager: entity_manager,
+          x: pos.x, y: pos.y, color: seed_def[:color], mature_age: seed_def[:mature_age], 
+          growth_speed: seed_def[:growth_speed], points: seed_def[:points]
+        entity_manager.remove_component plantable, from: ent_id
+        entity_manager.add_component HarvestableComponent.new, to: ent_id
       end
+
+      entity_manager.remove_entity seed_id
     end
   end
 end
@@ -104,15 +106,56 @@ class InputMappingSystem
 end
 
 class ClickSystem
+  def initialize
+    @up = true
+  end
+  # TODO this should be handled at the "input" layer
+
   def update(entity_manager, dt, input)
     mouse_x = input.mouse_pos[:x]
     mouse_y = input.mouse_pos[:y]
-    if input.down? Gosu::MsLeft
+    mouse_down = input.down?(Gosu::MsLeft)
+    if @up && mouse_down
+      @up = false
       entity_manager.query_entities :clickable, :boxed, :position do |clickable, boxed, pos, ent_id|
         if (mouse_x - pos.x).abs < boxed.width and (mouse_y - pos.y).abs < boxed.height
-          clickable.clicked = true
+          entity_manager.emit_event ClickedEvent.new, on: ent_id
         end
       end
+    end
+    @up = true if !mouse_down
+  end
+end
+
+class HarvestSystem
+  def update(entity_manager, dt, input)
+    plots = {}
+    entity_manager.query_entities :plot, :harvestable do |plot, harvestable, ent_id|
+      entity_manager.find_by_id plot.plant, :color do |color, plant_ent_id|
+        plots[ent_id] = {plot: plot, color: color.color}
+      end
+    end
+
+    entity_manager.query_entities :clicked, :plot, :harvestable do |clicked, plot, harvestable, ent_id|
+      entity_manager.consume_event clicked, from: ent_id
+      harvest_plot entity_manager, ent_id, plots
+      puts "SCORE SOMETHING!!"
+    end
+  end
+
+  def harvest_plot(entity_manager, ent_id, plots, harvested_ids=Set.new, harvest_color=nil)
+    return if plots[ent_id].nil?
+    plot, color = plots[ent_id].values_at :plot, :color
+    harvest_color ||= color
+
+    if harvest_color == color
+      entity_manager.remove_entity plot.plant
+      plot.plant = nil
+      harvested_ids << ent_id
+      plot.neighbors.each do |n|
+        harvest_plot entity_manager, n, plots, harvested_ids, harvest_color unless harvested_ids.include? n
+      end
+      entity_manager.add_component PlantableComponent.new, to: ent_id
     end
   end
 end

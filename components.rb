@@ -38,19 +38,32 @@ class BoxedComponent
 end
 
 class ClickableComponent
-  attr_accessor :clicked, :type
+  attr_accessor :type
   def initialize
     @type = :clickable
-    @clicked = false
   end
 end
 
 
-class PlantableComponent
-  attr_accessor :plant, :type
-  def initialize(plant = nil)
-    @type = :plantable
+class PlotComponent
+  attr_accessor :plant, :type, :neighbors
+  def initialize(plant = nil, neighbors = [])
+    @type = :plot
     @plant = plant
+    @neighbors = neighbors
+  end
+end
+
+class PlantableComponent
+  attr_accessor :type
+  def initialize
+    @type = :plantable
+  end
+end
+class HarvestableComponent
+  attr_accessor :type
+  def initialize
+    @type = :harvestable
   end
 end
 
@@ -90,6 +103,14 @@ class TimerComponent
     @event = event
   end
 end
+
+class ClickedEvent
+  attr_accessor :type
+  def initialize
+    @type = :clicked
+  end
+end
+
 
 class AgedEvent
   attr_accessor :type
