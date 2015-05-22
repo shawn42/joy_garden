@@ -1,14 +1,14 @@
 module Prefab
   include Gosu
   PLANT_COLORS = [Color::AQUA,Color::BLUE,Color::CYAN,Color::FUCHSIA,Color::GRAY,Color::GREEN,Color::RED,Color::WHITE,Color::YELLOW]
-  def self.garden(entity_manager)
+  def self.garden(entity_manager:, x:, y:)
     brown = Color.rgba(139,69,19,255)
     plots = {}
     6.times do |c|
       plots[c] = {}
       10.times do |r|
         plots[c][r] = Prefab.plot(entity_manager: entity_manager,
-          x: 20 + c * 25, y: 20 + r * 25, color: brown)
+          x: x+ 20 + c * 25, y: y + 20 + r * 25, color: brown)
       end
     end
 
@@ -29,6 +29,14 @@ module Prefab
     neighbors << plots[c][r+1] if r < plots[0].size-1
 
     neighbors
+  end
+
+  def self.score(entity_manager:, x:, y:, color:, points:0)
+    score = entity_manager.create
+    entity_manager.add_component PositionComponent.new(x, y), to: score
+    entity_manager.add_component ColorComponent.new(color), to: score
+    entity_manager.add_component ScoreComponent.new(points), to: score
+    score
   end
 
   def self.plant(entity_manager:, x:,y:,color:, mature_age:, growth_speed:, points:)

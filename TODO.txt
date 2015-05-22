@@ -1,13 +1,17 @@
-drawing garden
-drawing plants
-make plants grow
-click to plant - lock to grid
-click to harvest
-random plant queue
-make harvest group - logic based on type
+X drawing garden
+X drawing plants
+X make plants grow
+X click to plant - lock to grid
+X click to harvest
+X random plant queue
+X make harvest group - logic based on type
+
+GUI?
 add scoring / joy meter
+sounds
+
+use named args everywhere
 
 add ladybug
-
 juice - joy particles from harvesting
 add 2x2 sized plants?

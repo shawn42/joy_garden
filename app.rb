@@ -18,8 +18,9 @@ class JoyGarden < Gosu::Window
     @input_cacher = InputCacher.new
     build_systems
 
-    Prefab.garden @entity_manager
+    Prefab.garden entity_manager: @entity_manager, x: 5, y: 50
     Prefab.seed_generator entity_manager: @entity_manager, x: 200, y: 100
+    Prefab.score entity_manager: @entity_manager, color: Gosu::Color::WHITE, x: 5, y: 10
   end
 
   def needs_cursor?

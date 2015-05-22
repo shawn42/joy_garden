@@ -1,3 +1,9 @@
+module Enumerable
+  def sum
+    size > 0 ? inject(0, &:+) : 0
+  end
+end
+
 class GrowthSystem
   def update(entity_manager, dt, input)
     entity_manager.query_entities(:aged, :growth, 
@@ -131,36 +137,69 @@ class HarvestSystem
   def update(entity_manager, dt, input)
     plots = {}
     entity_manager.query_entities :plot, :harvestable do |plot, harvestable, ent_id|
-      entity_manager.find_by_id plot.plant, :color do |color, plant_ent_id|
-        plots[ent_id] = {plot: plot, color: color.color}
+      entity_manager.find_by_id plot.plant, :color, :growth do |color, growth, plant_ent_id|
+        plots[ent_id] = {plot: plot, color: color.color, growth: growth}
       end
     end
 
+    score = nil
+    entity_manager.query_entities :score do |s, ent_id|
+      score = s
+    end
     entity_manager.query_entities :clicked, :plot, :harvestable do |clicked, plot, harvestable, ent_id|
       entity_manager.consume_event clicked, from: ent_id
-      harvest_plot entity_manager, ent_id, plots
-      puts "SCORE SOMETHING!!"
+
+      g = plots[ent_id][:growth]
+      value = (g.range.max * g.cycle / 1000).ceil
+      num_harvested = harvest_plot entity_manager, ent_id, plots
+      multiplier = multiplier_for num_harvested
+
+      points = num_harvested * value * multiplier
+      puts "HARVESTED #{num_harvested} x#{value} x#{multiplier}  #{}"
+
+      if score
+        score.points += points
+      end
+
+    end
+  end
+
+  def multiplier_for(num_harvested)
+    if num_harvested > 16 
+      4
+    elsif num_harvested > 8
+      3
+    elsif num_harvested > 4
+      2
+    else
+      1
     end
   end
 
   def harvest_plot(entity_manager, ent_id, plots, harvested_ids=Set.new, harvest_color=nil)
-    return if plots[ent_id].nil?
-    plot, color = plots[ent_id].values_at :plot, :color
+    return 0 if plots[ent_id].nil?
+    plot, color, growth = plots[ent_id].values_at :plot, :color, :growth
     harvest_color ||= color
 
     if harvest_color == color
       entity_manager.remove_entity plot.plant
       plot.plant = nil
       harvested_ids << ent_id
-      plot.neighbors.each do |n|
-        harvest_plot entity_manager, n, plots, harvested_ids, harvest_color unless harvested_ids.include? n
-      end
       entity_manager.add_component PlantableComponent.new, to: ent_id
+      neighboring_harvests = plot.neighbors.map do |n|
+        harvest_plot entity_manager, n, plots, harvested_ids, harvest_color unless harvested_ids.include? n
+      end.compact.sum
+      harvest_count = growth.age == growth.range.max ? 1 : 0
+
+      harvest_count + neighboring_harvests
+    else
+      0
     end
   end
 end
 
 class RenderSystem
+
   def draw(target, entity_manager)
     entity_manager.query_entities :position, :color, :boxed do |pos, color, boxed, ent_id|
       c1 = c2 = c3 = c4 = color.color
@@ -173,6 +212,13 @@ class RenderSystem
       x4 = x1
       y4 = y3
       target.draw_quad(x1, y1, c1, x2, y2, c2, x3, y3, c3, x4, y4, c4)
+    end
+
+    entity_manager.query_entities :position, :score, :color do |pos, s, c, ent_id|
+      # where to push this font instance?
+      @font ||= Gosu::Font.new target, '', 32
+      z = 99
+      @font.draw s.points, pos.x, pos.y, z, 1, 1, c.color
     end
   end
 end

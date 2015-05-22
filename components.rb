@@ -11,6 +11,14 @@ class GrowthComponent
   end
 end
 
+class ScoreComponent
+  attr_accessor :points, :type
+  def initialize(points)
+    @points = points
+    @type = :score
+  end
+end
+
 class ColorComponent
   attr_accessor :color, :type
   def initialize(color)
