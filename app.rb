@@ -34,6 +34,7 @@ class JoyGarden < Gosu::Window
     @growth_system = GrowthSystem.new
     @planter_system = PlanterSystem.new
     @harvest_system = HarvestSystem.new
+    @sound_system = SoundSystem.new
     @seed_generator_system = SeedGeneratorSystem.new
     @render_system = RenderSystem.new
   end
@@ -57,6 +58,7 @@ class JoyGarden < Gosu::Window
       @growth_system.update @entity_manager, delta, input_snapshot
       @planter_system.update @entity_manager, delta, input_snapshot
       @harvest_system.update @entity_manager, delta, input_snapshot
+      @sound_system.update @entity_manager, delta, input_snapshot
       @seed_generator_system.update @entity_manager, delta, input_snapshot
 
       @entity_manager.clear_events

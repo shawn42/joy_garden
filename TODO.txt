@@ -15,3 +15,6 @@ use named args everywhere
 add ladybug
 juice - joy particles from harvesting
 add 2x2 sized plants?
+
+=====
+need object pool for components?

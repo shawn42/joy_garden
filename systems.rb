@@ -33,6 +33,7 @@ class PlanterSystem
       seed_id = seed_gen.seeds.pop
       entity_manager.find_by_id seed_id, :seed_definition do |seed_def_comp, seed_ent_id|
         seed_def = seed_def_comp.definition
+        entity_manager.emit_event SoundEffectEvent.new('plant.wav'), from: ent_id
         plot.plant = Prefab.plant entity_manager: entity_manager,
           x: pos.x, y: pos.y, color: seed_def[:color], mature_age: seed_def[:mature_age], 
           growth_speed: seed_def[:growth_speed], points: seed_def[:points]
@@ -148,6 +149,7 @@ class HarvestSystem
     end
     entity_manager.query_entities :clicked, :plot, :harvestable do |clicked, plot, harvestable, ent_id|
       entity_manager.consume_event clicked, from: ent_id
+      entity_manager.emit_event SoundEffectEvent.new('harvest2.wav'), from: ent_id
 
       g = plots[ent_id][:growth]
       value = (g.range.max * g.cycle / 1000).ceil
@@ -155,8 +157,9 @@ class HarvestSystem
       multiplier = multiplier_for num_harvested
 
       points = num_harvested * value * multiplier
-      puts "HARVESTED #{num_harvested} x#{value} x#{multiplier}  #{}"
+      puts "HARVESTED #{num_harvested} x#{value} x#{multiplier} #{points}"
 
+      entity_manager.emit_event SoundEffectEvent.new('bonus.wav'), from: ent_id if multiplier > 2
       if score
         score.points += points
       end
@@ -198,6 +201,15 @@ class HarvestSystem
   end
 end
 
+class SoundSystem
+  def update(entity_manager, dt, input)
+    entity_manager.query_entities :sound_effect do |effect, ent_id|
+      entity_manager.consume_event effect, from: ent_id
+      Gosu::Sample.new(effect.sound_to_play).play
+    end
+  end
+end
+
 class RenderSystem
 
   def draw(target, entity_manager)
@@ -215,7 +227,6 @@ class RenderSystem
     end
 
     entity_manager.query_entities :position, :score, :color do |pos, s, c, ent_id|
-      # where to push this font instance?
       @font ||= Gosu::Font.new target, '', 32
       z = 99
       @font.draw s.points, pos.x, pos.y, z, 1, 1, c.color

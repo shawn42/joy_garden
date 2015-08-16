@@ -119,6 +119,13 @@ class ClickedEvent
   end
 end
 
+class SoundEffectEvent
+  attr_accessor :type, :sound_to_play
+  def initialize(sound_to_play)
+    @type = :sound_effect
+    @sound_to_play = sound_to_play
+  end
+end
 
 class AgedEvent
   attr_accessor :type
