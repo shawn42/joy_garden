@@ -16,7 +16,7 @@ module Prefab
       10.times do |r|
         plot_id = plots[c][r]
         neighbors = neighbors_for(c,r,plots)
-        entity_manager.add_component(PlotComponent.new(nil, neighbors), to: plot_id)
+        entity_manager.add_component(component: PlotComponent.new(nil, neighbors), id: plot_id)
       end
     end
   end
@@ -33,47 +33,47 @@ module Prefab
 
   def self.score(entity_manager:, x:, y:, color:, points:0)
     score = entity_manager.create
-    entity_manager.add_component PositionComponent.new(x, y), to: score
-    entity_manager.add_component ColorComponent.new(color), to: score
-    entity_manager.add_component ScoreComponent.new(points), to: score
+    entity_manager.add_component component: PositionComponent.new(x, y), id: score
+    entity_manager.add_component component: ColorComponent.new(color), id: score
+    entity_manager.add_component component: ScoreComponent.new(points), id: score
     score
   end
 
   def self.plant(entity_manager:, x:,y:,color:, mature_age:, growth_speed:, points:)
     plant = entity_manager.create
-    entity_manager.add_component ColorComponent.new(color), to: plant
-    entity_manager.add_component BoxedComponent.new(1, 1), to: plant
-    entity_manager.add_component PositionComponent.new(x, y), to: plant
-    entity_manager.add_component GrowthComponent.new(1..mature_age, 5_000.0/growth_speed, 2), to: plant
-    entity_manager.add_component PointsComponent.new(points), to: plant
-    entity_manager.add_component TimerComponent.new(:aged, 1_000, false, AgedEvent), to: plant
+    entity_manager.add_component component: ColorComponent.new(color), id: plant
+    entity_manager.add_component component: BoxedComponent.new(1, 1), id: plant
+    entity_manager.add_component component: PositionComponent.new(x, y), id: plant
+    entity_manager.add_component component: GrowthComponent.new(1..mature_age, 5_000.0/growth_speed, 2), id: plant
+    entity_manager.add_component component: PointsComponent.new(points), id: plant
+    entity_manager.add_component component: TimerComponent.new(:aged, 1_000, false, AgedEvent), id: plant
     plant
   end
 
   def self.plot(entity_manager:, x:,y:,color:)
     plot = entity_manager.create
-    entity_manager.add_component ColorComponent.new(color), to: plot
-    entity_manager.add_component BoxedComponent.new(11, 11), to: plot
-    entity_manager.add_component PositionComponent.new(x, y), to: plot
-    entity_manager.add_component ClickableComponent.new, to: plot
-    entity_manager.add_component PlantableComponent.new, to: plot
+    entity_manager.add_component component: ColorComponent.new(color), id: plot
+    entity_manager.add_component component: BoxedComponent.new(11, 11), id: plot
+    entity_manager.add_component component: PositionComponent.new(x, y), id: plot
+    entity_manager.add_component component: ClickableComponent.new, id: plot
+    entity_manager.add_component component: PlantableComponent.new, id: plot
     plot
   end
 
   def self.seed_generator(entity_manager:, x:,y:)
     plot = entity_manager.create
-    entity_manager.add_component BoxedComponent.new(11, 11), to: plot
-    entity_manager.add_component PositionComponent.new(x, y), to: plot
-    entity_manager.add_component SeedGeneratorComponent.new, to: plot
+    entity_manager.add_component component: BoxedComponent.new(11, 11), id: plot
+    entity_manager.add_component component: PositionComponent.new(x, y), id: plot
+    entity_manager.add_component component: SeedGeneratorComponent.new, id: plot
     plot
   end
 
   def self.seed(entity_manager:, seed_definition:, x:, y:, w:, h:)
     seed = entity_manager.create
-    entity_manager.add_component ColorComponent.new(seed_definition[:color]), to: seed
-    entity_manager.add_component BoxedComponent.new(w, h), to: seed
-    entity_manager.add_component PositionComponent.new(x, y), to: seed
-    entity_manager.add_component SeedDefinitionComponent.new(seed_definition), to: seed
+    entity_manager.add_component component: ColorComponent.new(seed_definition[:color]), id: seed
+    entity_manager.add_component component: BoxedComponent.new(w, h), id: seed
+    entity_manager.add_component component: PositionComponent.new(x, y), id: seed
+    entity_manager.add_component component: SeedDefinitionComponent.new(seed_definition), id: seed
     seed
   end
 

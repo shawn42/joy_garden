@@ -1,6 +1,5 @@
 require 'gosu'
 require 'awesome_print'
-require 'set'
 require 'pry'
 
 require_relative 'components'
@@ -61,7 +60,7 @@ class JoyGarden < Gosu::Window
       @sound_system.update @entity_manager, delta, input_snapshot
       @seed_generator_system.update @entity_manager, delta, input_snapshot
 
-      @entity_manager.clear_events
+      # @entity_manager.clear_events
     end
 
     @last_millis = millis

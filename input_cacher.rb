@@ -1,3 +1,5 @@
+require 'set'
+
 class InputCacher
   attr_reader :down_ids
   attr_accessor :mouse_pos

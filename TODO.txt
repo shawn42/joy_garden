@@ -6,6 +6,12 @@ X click to harvest
 X random plant queue
 X make harvest group - logic based on type
 
+X switch to new performent ECS
+
+X remove types from components
+X remove translation from :foo to FooComponent
+remove emit/consume event?
+
 GUI?
 add scoring / joy meter
 sounds

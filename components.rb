@@ -1,9 +1,8 @@
 class GrowthComponent
   attr_accessor :range, :age, :cycle,
-    :current_cycle, :type, :size_per_age
+    :current_cycle, :size_per_age
 
   def initialize(range, cycle, size_per_age)
-    @type = :growth
     @age = range.min
     @range = range
     @cycle = cycle
@@ -12,98 +11,73 @@ class GrowthComponent
 end
 
 class ScoreComponent
-  attr_accessor :points, :type
+  attr_accessor :points
   def initialize(points)
     @points = points
-    @type = :score
   end
 end
 
 class ColorComponent
-  attr_accessor :color, :type
+  attr_accessor :color
   def initialize(color)
     @color = color
-    @type = :color
   end
 end
 
 class PositionComponent
-  attr_accessor :x, :y, :type
+  attr_accessor :x, :y
   def initialize(x,y)
-    @type = :position
     @x = x
     @y = y
   end
 end
 
 class BoxedComponent
-  attr_accessor :width, :height, :type
+  attr_accessor :width, :height
   def initialize(width,height)
-    @type = :boxed
     @width = width
     @height = height
   end
 end
 
-class ClickableComponent
-  attr_accessor :type
-  def initialize
-    @type = :clickable
-  end
-end
-
 
 class PlotComponent
-  attr_accessor :plant, :type, :neighbors
+  attr_accessor :plant, :neighbors
   def initialize(plant = nil, neighbors = [])
-    @type = :plot
     @plant = plant
     @neighbors = neighbors
   end
 end
 
-class PlantableComponent
-  attr_accessor :type
-  def initialize
-    @type = :plantable
-  end
-end
-class HarvestableComponent
-  attr_accessor :type
-  def initialize
-    @type = :harvestable
-  end
-end
+class ClickableComponent; end
+class PlantableComponent; end
+class HarvestableComponent; end
 
 class SeedGeneratorComponent
-  attr_accessor :size, :seeds, :type
+  attr_accessor :size, :seeds
   def initialize(size = 3)
-    @type = :seed_generator
     @size = size
     @seeds = []
   end
 end
 
 class SeedDefinitionComponent
-  attr_accessor :definition, :type
+  attr_accessor :definition
   def initialize(seed_def)
-    @type = :seed_definition
     @definition = seed_def
   end
 end
 
 class PointsComponent
-  attr_accessor :points, :type
+  attr_accessor :points
   def initialize(points)
-    @type = :points
     @points = points
   end
 end
 
 class TimerComponent
-  attr_accessor :ttl, :repeat, :total, :event, :type, :name
+  attr_accessor :ttl, :repeat, :total, :event, :name
   def initialize(name, ttl, repeat, event = nil)
-    @type = :timer
     @name = name
     @total = ttl
     @ttl = ttl
@@ -112,25 +86,12 @@ class TimerComponent
   end
 end
 
-class ClickedEvent
-  attr_accessor :type
-  def initialize
-    @type = :clicked
-  end
-end
-
+class ClickedEvent; end
+class AgedEvent; end
 class SoundEffectEvent
-  attr_accessor :type, :sound_to_play
+  attr_accessor :sound_to_play
   def initialize(sound_to_play)
-    @type = :sound_effect
     @sound_to_play = sound_to_play
-  end
-end
-
-class AgedEvent
-  attr_accessor :type
-  def initialize
-    @type = :aged
   end
 end
 

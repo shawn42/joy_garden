@@ -6,14 +6,18 @@ end
 
 class GrowthSystem
   def update(entity_manager, dt, input)
-    entity_manager.query_entities(:aged, :growth, 
-                                  :boxed, :position) do |event, growth, boxed, pos, ent_id|
+    entity_manager.each_entity(AgedEvent, GrowthComponent, BoxedComponent, PositionComponent) do |rec|
+      ent_id = rec[:id]
+      event, growth, boxed, pos = rec[:components]
+
+      entity_manager.consume_event event, from: ent_id
+
       if growth.age < growth.range.max
         growth.age += 1 
         boxed.width = growth.age * growth.size_per_age
         boxed.height = growth.age * growth.size_per_age
         # TODO change color based on age?
-        entity_manager.add_component TimerComponent.new(:aged, growth.cycle, false, AgedEvent), to: ent_id
+        entity_manager.add_component component: TimerComponent.new(:aged, growth.cycle, false, AgedEvent), id: ent_id
       end
     end
   end
@@ -22,23 +26,23 @@ end
 
 class PlanterSystem
   def update(entity_manager, dt, input)
-    seed_gen = nil
-    entity_manager.query_entities :seed_generator do |gen, ent_id|
-      # puts "hijacking scope for missing manager method... fix me"
-      seed_gen = gen
-    end
+    seed_gen = entity_manager.find(SeedGeneratorComponent).first[:components].first
 
-    entity_manager.query_entities :clicked, :plot, :position, :plantable do |clicked, plot, pos, plantable, ent_id|
+    entity_manager.each_entity ClickedEvent, PlotComponent, PositionComponent, PlantableComponent do |rec|
+      clicked, plot, pos, plantable = rec[:components]
+      ent_id = rec[:id]
       entity_manager.consume_event clicked, from: ent_id
       seed_id = seed_gen.seeds.pop
-      entity_manager.find_by_id seed_id, :seed_definition do |seed_def_comp, seed_ent_id|
+      entity_manager.find_by_id seed_id, SeedDefinitionComponent do |seed_def_rec|
+        seed_def_comp = seed_def_rec[:components][0]
+        seed_ent_id = seed_def_rec[:id]
         seed_def = seed_def_comp.definition
-        entity_manager.emit_event SoundEffectEvent.new('plant.wav'), from: ent_id
+        entity_manager.emit_event SoundEffectEvent.new('plant.ogg'), from: ent_id
         plot.plant = Prefab.plant entity_manager: entity_manager,
           x: pos.x, y: pos.y, color: seed_def[:color], mature_age: seed_def[:mature_age], 
-          growth_speed: seed_def[:growth_speed], points: seed_def[:points]
-        entity_manager.remove_component plantable, from: ent_id
-        entity_manager.add_component HarvestableComponent.new, to: ent_id
+          growth_speed: seed_def[:growth_speed], points: seed_def[:points_component]
+        entity_manager.remove_component klass: plantable.class, id: ent_id
+        entity_manager.add_component component: HarvestableComponent.new, id: ent_id
       end
 
       entity_manager.remove_entity seed_id
@@ -51,7 +55,9 @@ class SeedGeneratorSystem
   def update(entity_manager, dt, input)
     seeds_added = 0
 
-    entity_manager.query_entities :seed_generator, :position do |gen, pos, ent_id|
+    entity_manager.each_entity SeedGeneratorComponent, PositionComponent do |rec|
+      gen, pos = rec[:components]
+      ent_id = rec[:id]
       target_size = gen.size
       num_seeds = gen.seeds.size 
 
@@ -67,7 +73,9 @@ class SeedGeneratorSystem
       end
     end
 
-    entity_manager.query_entities :seed_definition, :position do |seed_def, pos, ent_id|
+    entity_manager.each_entity SeedDefinitionComponent, PositionComponent do |rec|
+      seed_def, pos = rec[:components]
+      ent_id = rec[:id]
       pos.y += seeds_added*(SEED_HEIGHT+1)*2
     end
   end
@@ -86,14 +94,17 @@ end
 
 class TimerSystem
   def update(entity_manager, dt, input)
-    entity_manager.query_entities :timer do |timer, ent_id|
+    entity_manager.each_entity TimerComponent do |rec|
+      timer = rec[:components][0]
+      ent_id = rec[:id]
+      # puts "updating timer #{timer.name} #{timer.ttl} -= #{dt}"
       timer.ttl -= dt
       if timer.ttl <= 0
         entity_manager.emit_event timer.event.new, on: ent_id if timer.event
         if timer.repeat
           timer.ttl = timer.total
         else
-          entity_manager.remove_component(timer, from: ent_id)  
+          entity_manager.remove_component(klass: timer.class, id: ent_id)  
         end
       end
     end
@@ -103,7 +114,9 @@ end
 class InputMappingSystem
   def update(entity_manager, dt, input)
     exit if input.down?(Gosu::KbEscape)
-    entity_manager.query_entities :keyboard_control, :control do |keys, control, ent_id|
+    entity_manager.each_entity :keyboard_control, :control do |rec|
+      keys, control = rec[:components]
+      ent_id = rec[:id]
       control.move_left = input.down?(keys.move_left)
       control.move_right = input.down?(keys.move_right)
       control.move_up = input.down?(keys.move_up)
@@ -124,7 +137,9 @@ class ClickSystem
     mouse_down = input.down?(Gosu::MsLeft)
     if @up && mouse_down
       @up = false
-      entity_manager.query_entities :clickable, :boxed, :position do |clickable, boxed, pos, ent_id|
+      entity_manager.each_entity ClickableComponent, BoxedComponent, PositionComponent do |rec|
+        clickable, boxed, pos = rec[:components]
+        ent_id = rec[:id]
         if (mouse_x - pos.x).abs < boxed.width and (mouse_y - pos.y).abs < boxed.height
           entity_manager.emit_event ClickedEvent.new, on: ent_id
         end
@@ -137,19 +152,27 @@ end
 class HarvestSystem
   def update(entity_manager, dt, input)
     plots = {}
-    entity_manager.query_entities :plot, :harvestable do |plot, harvestable, ent_id|
-      entity_manager.find_by_id plot.plant, :color, :growth do |color, growth, plant_ent_id|
+    entity_manager.each_entity PlotComponent, HarvestableComponent do |rec|
+      plot, harvestable = rec[:components]
+      ent_id = rec[:id]
+      entity_manager.find_by_id plot.plant, ColorComponent, GrowthComponent do |rec|
+        color, growth = rec[:components]
+        plant_ent_id = rec[:id]
         plots[ent_id] = {plot: plot, color: color.color, growth: growth}
       end
     end
 
     score = nil
-    entity_manager.query_entities :score do |s, ent_id|
+    entity_manager.each_entity ScoreComponent do |rec|
+      s = rec[:components][0]
+      ent_id = rec[:id]
       score = s
     end
-    entity_manager.query_entities :clicked, :plot, :harvestable do |clicked, plot, harvestable, ent_id|
+    entity_manager.each_entity ClickedEvent, PlotComponent, HarvestableComponent do |rec|
+      clicked, plot, harvestable = rec[:components]
+      ent_id = rec[:id]
       entity_manager.consume_event clicked, from: ent_id
-      entity_manager.emit_event SoundEffectEvent.new('harvest2.wav'), from: ent_id
+      entity_manager.emit_event SoundEffectEvent.new('harvest2.ogg'), from: ent_id
 
       g = plots[ent_id][:growth]
       value = (g.range.max * g.cycle / 1000).ceil
@@ -159,7 +182,7 @@ class HarvestSystem
       points = num_harvested * value * multiplier
       puts "HARVESTED #{num_harvested} x#{value} x#{multiplier} #{points}"
 
-      entity_manager.emit_event SoundEffectEvent.new('bonus.wav'), from: ent_id if multiplier > 2
+      entity_manager.emit_event SoundEffectEvent.new('bonus.ogg'), from: ent_id if multiplier > 2
       if score
         score.points += points
       end
@@ -188,7 +211,7 @@ class HarvestSystem
       entity_manager.remove_entity plot.plant
       plot.plant = nil
       harvested_ids << ent_id
-      entity_manager.add_component PlantableComponent.new, to: ent_id
+      entity_manager.add_component component: PlantableComponent.new, id: ent_id
       neighboring_harvests = plot.neighbors.map do |n|
         harvest_plot entity_manager, n, plots, harvested_ids, harvest_color unless harvested_ids.include? n
       end.compact.sum
@@ -203,7 +226,9 @@ end
 
 class SoundSystem
   def update(entity_manager, dt, input)
-    entity_manager.query_entities :sound_effect do |effect, ent_id|
+    entity_manager.each_entity SoundEffectEvent do |rec|
+      effect = rec[:components][0]
+      ent_id = rec[:id]
       entity_manager.consume_event effect, from: ent_id
       Gosu::Sample.new(effect.sound_to_play).play
     end
@@ -213,7 +238,9 @@ end
 class RenderSystem
 
   def draw(target, entity_manager)
-    entity_manager.query_entities :position, :color, :boxed do |pos, color, boxed, ent_id|
+    entity_manager.each_entity PositionComponent, ColorComponent, BoxedComponent do |rec|
+      pos, color, boxed = rec[:components]
+      ent_id = rec[:id]
       c1 = c2 = c3 = c4 = color.color
       x1 = pos.x - boxed.width
       y1 = pos.y - boxed.height
@@ -223,10 +250,13 @@ class RenderSystem
       y3 = pos.y + boxed.height
       x4 = x1
       y4 = y3
+      binding.pry if c1.nil?
       target.draw_quad(x1, y1, c1, x2, y2, c2, x3, y3, c3, x4, y4, c4)
     end
 
-    entity_manager.query_entities :position, :score, :color do |pos, s, c, ent_id|
+    entity_manager.each_entity PositionComponent, ScoreComponent, ColorComponent do |rec|
+      pos, s, c = rec[:components]
+      ent_id = rec[:id]
       @font ||= Gosu::Font.new target, '', 32
       z = 99
       @font.draw s.points, pos.x, pos.y, z, 1, 1, c.color
