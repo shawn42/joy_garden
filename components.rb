@@ -95,3 +95,12 @@ class SoundEffectEvent
   end
 end
 
+class PlantedEvent
+  attr_accessor :plot_ent_id, :x, :y
+  def initialize(plot_ent_id:,x:,y:)
+    @plot_ent_id = plot_ent_id
+    @x = x
+    @y = y
+  end
+end
+

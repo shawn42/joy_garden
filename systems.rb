@@ -31,21 +31,45 @@ class PlanterSystem
     entity_manager.each_entity ClickedEvent, PlotComponent, PositionComponent, PlantableComponent do |rec|
       clicked, plot, pos, plantable = rec[:components]
       ent_id = rec[:id]
-      entity_manager.consume_event clicked, from: ent_id
       seed_id = seed_gen.seeds.pop
-      entity_manager.find_by_id seed_id, SeedDefinitionComponent do |seed_def_rec|
-        seed_def_comp = seed_def_rec[:components][0]
-        seed_ent_id = seed_def_rec[:id]
-        seed_def = seed_def_comp.definition
-        entity_manager.emit_event SoundEffectEvent.new('plant.ogg'), from: ent_id
-        plot.plant = Prefab.plant entity_manager: entity_manager,
-          x: pos.x, y: pos.y, color: seed_def[:color], mature_age: seed_def[:mature_age], 
-          growth_speed: seed_def[:growth_speed], points: seed_def[:points_component]
-        entity_manager.remove_component klass: plantable.class, id: ent_id
-        entity_manager.add_component component: HarvestableComponent.new, id: ent_id
+
+      entity_manager.consume_event clicked, from: ent_id
+      entity_manager.emit_event PlantedEvent.new(
+        plot_ent_id: ent_id, 
+        x: pos.x, 
+        y: pos.y
+      ), on: seed_id
+    end
+  end
+end
+
+class SeedPlanterSystem
+  def update(entity_manager, dt, input)
+    entity_manager.each_entity PlantedEvent, SeedDefinitionComponent do |rec|
+      planted, seed_def_comp = rec[:components]
+      seed_ent_id = rec[:id]
+      seed_def = seed_def_comp.definition
+
+      # TODO: What if a "plot" entity just had a PlantReference component?
+      # Wouldn't have to lookup and modify the PlotComponent.plant field.
+      entity_manager.find_by_id planted.plot_ent_id, PlotComponent, PlantableComponent do |plot_rec|
+        plot = plot_rec[:components][0]
+        plot.plant = Prefab.plant(
+          entity_manager: entity_manager,
+          x:              planted.x, 
+          y:              planted.y, 
+          color:          seed_def[:color], 
+          mature_age:     seed_def[:mature_age], 
+          growth_speed:   seed_def[:growth_speed], 
+          points:         seed_def[:points_component])
+
+        entity_manager.emit_event SoundEffectEvent.new('plant.ogg'), on: planted.plot_ent_id
+        entity_manager.remove_component klass: PlantableComponent, id: planted.plot_ent_id
+        entity_manager.add_component component: HarvestableComponent.new, id: planted.plot_ent_id
       end
 
-      entity_manager.remove_entity seed_id
+      entity_manager.consume_event planted, from: seed_ent_id
+      entity_manager.remove_entity seed_ent_id
     end
   end
 end
