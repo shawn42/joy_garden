@@ -1,8 +1,10 @@
 class EntityManager
+  attr_reader :num_entities
   def initialize
     @comp_to_id = Hash.new {|h, k| h[k] = []}
     @id_to_comp = Hash.new {|h, k| h[k] = {}}
     @cache = {}
+    @num_entities = 0
   end
 
   def find_by_id(id, *klasses)
@@ -48,6 +50,7 @@ class EntityManager
   end
 
   def remove_entity(id)
+    @num_entities -= 1
     ent_record = @id_to_comp.delete(id)
     klasses = ent_record.keys
 
@@ -84,13 +87,9 @@ class EntityManager
     result
   end
 
-  # TODO cache this
-  def num_entities
-    @id_to_comp.size
-  end
-
   private 
   def generate_id
+    @num_entities += 1
     @ent_counter ||= 0
     @ent_counter += 1
   end
