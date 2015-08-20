@@ -299,8 +299,8 @@ end
 class SoundSystem
   def update(entity_manager, dt, input)
     entity_manager.each_entity SoundEffectEvent do |rec|
-      effect = rec.components[0]
       ent_id = rec.id
+      effect = rec.get(SoundEffectEvent)
       entity_manager.remove_component klass: effect.class, id: ent_id
       Gosu::Sample.new(effect.sound_to_play).play
     end
