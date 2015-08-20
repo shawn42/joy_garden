@@ -1,12 +1,48 @@
+# class Vec2
+#   attr_reader :x, :y
+#   def initialize(x,y)
+#     @x = x
+#     @y = y
+#   end
+# end
+#
 module Enumerable
   def sum
     size > 0 ? inject(0, &:+) : 0
   end
 end
 
+class ParticlesEmitterSystem
+  def update(entity_manager, dt, input)
+    entity_manager.each_entity(EmitParticlesEvent, Position, JoyColor) do |rec|
+      ent_id = rec.id
+      evt, pos, color = rec.components
+
+      speed = (-10..10).to_a
+      20.times do
+        entity_manager.add_entity pos.dup, Particle.new, 
+          JoyColor.new(evt.color), 
+          Velocity.new(speed.sample, speed.sample), Boxed.new(rand(3),rand(3))
+      end
+
+      entity_manager.remove_component klass: EmitParticlesEvent, id: ent_id
+    end
+  end
+end
+
 class ParticlesSystem
   def update(entity_manager, dt, input)
     entity_manager.each_entity(Velocity, Particle, Position, JoyColor) do |rec|
+      # TODO update color as well
+      ent_id = rec.id
+      vel, particle, pos, color = rec.components
+
+      scalar = dt/100.0
+      pos.x += vel.x * scalar
+      pos.y += vel.y * scalar
+
+      c = color.color
+      color.color = Gosu::Color.rgba(c.red,c.green,c.blue,c.alpha-10*scalar)
     end
   end
 end
@@ -176,7 +212,7 @@ class ClickSystem
         clickable, boxed, pos = rec.components
         ent_id = rec.id
         if (mouse_x - pos.x).abs < boxed.width and (mouse_y - pos.y).abs < boxed.height
-          entity_manager.add_component component: ClickedEvent.new, id: ent_id
+          entity_manager.add_component component: ClickedEvent.new(x: mouse_x, y: mouse_y), id: ent_id
         end
       end
     end
@@ -199,7 +235,7 @@ class HarvestSystem
 
     score = nil
     entity_manager.each_entity Score do |rec|
-      s = rec.components[0]
+      s = rec.get(Score)
       ent_id = rec.id
       score = s
     end
@@ -243,6 +279,7 @@ class HarvestSystem
     harvest_color ||= color
 
     if harvest_color == color
+      entity_manager.add_component component: EmitParticlesEvent.new(color: color), id: ent_id 
       entity_manager.remove_entity plot.plant
       plot.plant = nil
       harvested_ids << ent_id

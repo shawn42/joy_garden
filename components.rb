@@ -2,10 +2,17 @@ class Clickable; end
 class Plantable; end
 class Harvestable; end
 class Particle; end
+class EmitParticlesEvent
+  attr_accessor :color
+  def initialize(color:)
+    @color = color
+  end
+end
 class Velocity
-  attr_accessor :vel
-  def initialize(vel)
-    @vel = vel
+  attr_accessor :x, :y
+  def initialize(x, y)
+    @x = x
+    @y = y
   end
 end
 
@@ -93,7 +100,13 @@ class Timer
   end
 end
 
-class ClickedEvent; end
+class ClickedEvent
+  attr_reader :x, :y
+  def initialize(x:,y:)
+    @x = x
+    @y = y
+  end
+end
 class AgedEvent; end
 class SoundEffectEvent
   attr_accessor :sound_to_play
