@@ -10,7 +10,8 @@ X switch to new performent ECS
 
 X remove types from components
 X remove translation from :foo to FooComponent
-remove emit/consume event?
+X remove emit/consume event?
+X remove create
 
 GUI?
 add scoring / joy meter

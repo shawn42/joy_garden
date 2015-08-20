@@ -10,7 +10,7 @@ class GrowthSystem
       ent_id = rec[:id]
       event, growth, boxed, pos = rec[:components]
 
-      entity_manager.consume_event event, from: ent_id
+      entity_manager.remove_component klass: event.class, id: ent_id
 
       if growth.age < growth.range.max
         growth.age += 1 
@@ -33,12 +33,12 @@ class PlanterSystem
       ent_id = rec[:id]
       seed_id = seed_gen.seeds.pop
 
-      entity_manager.consume_event clicked, from: ent_id
-      entity_manager.emit_event PlantedEvent.new(
+      entity_manager.remove_component klass: clicked.class, id: ent_id
+      entity_manager.add_component component: PlantedEvent.new(
         plot_ent_id: ent_id, 
         x: pos.x, 
         y: pos.y
-      ), on: seed_id
+      ), id: seed_id
     end
   end
 end
@@ -63,12 +63,12 @@ class SeedPlanterSystem
           growth_speed:   seed_def[:growth_speed], 
           points:         seed_def[:points_component])
 
-        entity_manager.emit_event SoundEffectEvent.new('plant.ogg'), on: planted.plot_ent_id
+        entity_manager.add_component component: SoundEffectEvent.new('plant.ogg'), id: planted.plot_ent_id
         entity_manager.remove_component klass: PlantableComponent, id: planted.plot_ent_id
         entity_manager.add_component component: HarvestableComponent.new, id: planted.plot_ent_id
       end
 
-      entity_manager.consume_event planted, from: seed_ent_id
+      entity_manager.remove_component klass: planted.class, id: seed_ent_id
       entity_manager.remove_entity seed_ent_id
     end
   end
@@ -124,7 +124,7 @@ class TimerSystem
       # puts "updating timer #{timer.name} #{timer.ttl} -= #{dt}"
       timer.ttl -= dt
       if timer.ttl <= 0
-        entity_manager.emit_event timer.event.new, on: ent_id if timer.event
+        entity_manager.add_component component: timer.event.new, id: ent_id if timer.event
         if timer.repeat
           timer.ttl = timer.total
         else
@@ -165,7 +165,7 @@ class ClickSystem
         clickable, boxed, pos = rec[:components]
         ent_id = rec[:id]
         if (mouse_x - pos.x).abs < boxed.width and (mouse_y - pos.y).abs < boxed.height
-          entity_manager.emit_event ClickedEvent.new, on: ent_id
+          entity_manager.add_component component: ClickedEvent.new, id: ent_id
         end
       end
     end
@@ -195,8 +195,8 @@ class HarvestSystem
     entity_manager.each_entity ClickedEvent, PlotComponent, HarvestableComponent do |rec|
       clicked, plot, harvestable = rec[:components]
       ent_id = rec[:id]
-      entity_manager.consume_event clicked, from: ent_id
-      entity_manager.emit_event SoundEffectEvent.new('harvest2.ogg'), from: ent_id
+      entity_manager.remove_component klass: clicked.class, id: ent_id
+      entity_manager.add_component component: SoundEffectEvent.new('harvest2.ogg'), id: ent_id
 
       g = plots[ent_id][:growth]
       value = (g.range.max * g.cycle / 1000).ceil
@@ -206,7 +206,7 @@ class HarvestSystem
       points = num_harvested * value * multiplier
       puts "HARVESTED #{num_harvested} x#{value} x#{multiplier} #{points}"
 
-      entity_manager.emit_event SoundEffectEvent.new('bonus.ogg'), from: ent_id if multiplier > 2
+      entity_manager.add_component component: SoundEffectEvent.new('bonus.ogg'), id: ent_id if multiplier > 2
       if score
         score.points += points
       end
@@ -253,7 +253,7 @@ class SoundSystem
     entity_manager.each_entity SoundEffectEvent do |rec|
       effect = rec[:components][0]
       ent_id = rec[:id]
-      entity_manager.consume_event effect, from: ent_id
+      entity_manager.remove_component klass: effect.class, id: ent_id
       Gosu::Sample.new(effect.sound_to_play).play
     end
   end

@@ -5,21 +5,6 @@ class EntityManager
     @cache = {}
   end
 
-
-  ########## TMP ADAPTER ###########
-  def create
-    generate_id
-  end
-
-  def emit_event(event, opts)
-    $clicked = true
-    add_component component: event, id: opts[:on]
-  end
-
-  def consume_event(event, opts)
-    remove_component klass: event.class, id: opts[:from]
-  end
-
   def find_by_id(id, *klasses)
     ent_record = @id_to_comp[id]
     components = ent_record.values_at(*klasses)
@@ -34,7 +19,6 @@ class EntityManager
     end
   end
 
-  ########## TMP ADAPTER ###########
 
   def add_component(component:,id:)
 
@@ -49,8 +33,6 @@ class EntityManager
         results << build_record(id, components) if components.size == comp_klasses.size && !components.any?(&:nil?)
       end
     end
-
-    # @cache.delete_if { |k,v| k.include?(klass) }
   end
 
   def remove_component(klass:, id:)
@@ -63,7 +45,6 @@ class EntityManager
         results.delete_if{|res| res[:id] == id}
       end
     end
-    # @cache.delete_if { |k,v| k.include?(klass) }
   end
 
   def remove_entity(id)
@@ -96,7 +77,6 @@ class EntityManager
 
     id_collection = @comp_to_id.values_at *klasses
     intersecting_ids = id_collection.inject &:&
-    # intersecting_ids = id_collection.inject { |m,ids| m & ids }
     result = intersecting_ids.map do |id|
       build_record id, @id_to_comp[id].values_at(*klasses)
     end
@@ -114,6 +94,7 @@ class EntityManager
     { id: id, components: components }
   end
 
+  # EntityQueryResult = Struct.new :id, :components
 end
 
 

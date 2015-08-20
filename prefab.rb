@@ -32,49 +32,38 @@ module Prefab
   end
 
   def self.score(entity_manager:, x:, y:, color:, points:0)
-    score = entity_manager.create
-    entity_manager.add_component component: PositionComponent.new(x, y), id: score
-    entity_manager.add_component component: ColorComponent.new(color), id: score
-    entity_manager.add_component component: ScoreComponent.new(points), id: score
-    score
+    entity_manager.add_entity PositionComponent.new(x, y),
+     ColorComponent.new(color), ScoreComponent.new(points)
   end
 
   def self.plant(entity_manager:, x:,y:,color:, mature_age:, growth_speed:, points:)
-    plant = entity_manager.create
-    entity_manager.add_component component: ColorComponent.new(color), id: plant
-    entity_manager.add_component component: BoxedComponent.new(1, 1), id: plant
-    entity_manager.add_component component: PositionComponent.new(x, y), id: plant
-    entity_manager.add_component component: GrowthComponent.new(1..mature_age, 5_000.0/growth_speed, 2), id: plant
-    entity_manager.add_component component: PointsComponent.new(points), id: plant
-    entity_manager.add_component component: TimerComponent.new(:aged, 1_000, false, AgedEvent), id: plant
-    plant
+    entity_manager.add_entity ColorComponent.new(color),
+      BoxedComponent.new(1, 1),
+      PositionComponent.new(x, y),
+      GrowthComponent.new(1..mature_age, 5_000.0/growth_speed, 2),
+      PointsComponent.new(points),
+      TimerComponent.new(:aged, 1_000, false, AgedEvent)
   end
 
   def self.plot(entity_manager:, x:,y:,color:)
-    plot = entity_manager.create
-    entity_manager.add_component component: ColorComponent.new(color), id: plot
-    entity_manager.add_component component: BoxedComponent.new(11, 11), id: plot
-    entity_manager.add_component component: PositionComponent.new(x, y), id: plot
-    entity_manager.add_component component: ClickableComponent.new, id: plot
-    entity_manager.add_component component: PlantableComponent.new, id: plot
-    plot
+    entity_manager.add_entity ColorComponent.new(color),
+      BoxedComponent.new(11, 11),
+      PositionComponent.new(x, y),
+      ClickableComponent.new,
+      PlantableComponent.new
   end
 
   def self.seed_generator(entity_manager:, x:,y:)
-    plot = entity_manager.create
-    entity_manager.add_component component: BoxedComponent.new(11, 11), id: plot
-    entity_manager.add_component component: PositionComponent.new(x, y), id: plot
-    entity_manager.add_component component: SeedGeneratorComponent.new, id: plot
-    plot
+    entity_manager.add_entity BoxedComponent.new(11, 11),
+      PositionComponent.new(x, y),
+      SeedGeneratorComponent.new
   end
 
   def self.seed(entity_manager:, seed_definition:, x:, y:, w:, h:)
-    seed = entity_manager.create
-    entity_manager.add_component component: ColorComponent.new(seed_definition[:color]), id: seed
-    entity_manager.add_component component: BoxedComponent.new(w, h), id: seed
-    entity_manager.add_component component: PositionComponent.new(x, y), id: seed
-    entity_manager.add_component component: SeedDefinitionComponent.new(seed_definition), id: seed
-    seed
+    entity_manager.add_entity ColorComponent.new(seed_definition[:color]),
+      BoxedComponent.new(w, h),
+      PositionComponent.new(x, y),
+      SeedDefinitionComponent.new(seed_definition)
   end
 
 end
