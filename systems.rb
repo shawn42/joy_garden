@@ -33,7 +33,6 @@ end
 class ParticlesSystem
   def update(entity_manager, dt, input)
     entity_manager.each_entity(Velocity, Particle, Position, JoyColor) do |rec|
-      # TODO update color as well
       ent_id = rec.id
       vel, particle, pos, color = rec.components
 
@@ -43,6 +42,7 @@ class ParticlesSystem
 
       c = color.color
       color.color = Gosu::Color.rgba(c.red,c.green,c.blue,c.alpha-10*scalar)
+      entity_manager.remove_entity ent_id if color.color.alpha <= 0
     end
   end
 end

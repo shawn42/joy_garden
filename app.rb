@@ -42,7 +42,8 @@ class JoyGarden < Gosu::Window
   end
 
   def update
-    self.caption = Gosu.fps
+    # self.caption = "FPS: #{Gosu.fps} ENTS: #{@entity_manager.num_entities}"
+    self.caption = "FPS: #{Gosu.fps}"
 
     millis = Gosu::milliseconds.to_f
 

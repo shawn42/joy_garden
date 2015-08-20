@@ -84,6 +84,11 @@ class EntityManager
     result
   end
 
+  # TODO cache this
+  def num_entities
+    @id_to_comp.size
+  end
+
   private 
   def generate_id
     @ent_counter ||= 0
