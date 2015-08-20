@@ -1,4 +1,15 @@
-class GrowthComponent
+class Clickable; end
+class Plantable; end
+class Harvestable; end
+class Particle; end
+class Velocity
+  attr_accessor :vel
+  def initialize(vel)
+    @vel = vel
+  end
+end
+
+class Growth
   attr_accessor :range, :age, :cycle,
     :current_cycle, :size_per_age
 
@@ -10,21 +21,21 @@ class GrowthComponent
   end
 end
 
-class ScoreComponent
+class Score
   attr_accessor :points
   def initialize(points)
     @points = points
   end
 end
 
-class ColorComponent
+class JoyColor
   attr_accessor :color
   def initialize(color)
     @color = color
   end
 end
 
-class PositionComponent
+class Position
   attr_accessor :x, :y
   def initialize(x,y)
     @x = x
@@ -32,7 +43,7 @@ class PositionComponent
   end
 end
 
-class BoxedComponent
+class Boxed
   attr_accessor :width, :height
   def initialize(width,height)
     @width = width
@@ -41,7 +52,7 @@ class BoxedComponent
 end
 
 
-class PlotComponent
+class Plot
   attr_accessor :plant, :neighbors
   def initialize(plant = nil, neighbors = [])
     @plant = plant
@@ -49,11 +60,7 @@ class PlotComponent
   end
 end
 
-class ClickableComponent; end
-class PlantableComponent; end
-class HarvestableComponent; end
-
-class SeedGeneratorComponent
+class SeedGenerator
   attr_accessor :size, :seeds
   def initialize(size = 3)
     @size = size
@@ -61,22 +68,22 @@ class SeedGeneratorComponent
   end
 end
 
-class SeedDefinitionComponent
+class SeedDefinition
   attr_accessor :definition
   def initialize(seed_def)
     @definition = seed_def
   end
 end
 
-class PointsComponent
+class Points
   attr_accessor :points
   def initialize(points)
     @points = points
   end
 end
 
-class TimerComponent
-  attr_accessor :ttl, :repeat, :total, :event, :name
+class Timer
+  attr_accessor :ttl, :repeat, :total, :event, :name, :expires_at
   def initialize(name, ttl, repeat, event = nil)
     @name = name
     @total = ttl

@@ -30,7 +30,7 @@ class EntityManager
     @cache.each do |comp_klasses, results|
       if comp_klasses.include?(klass)
         components = ent_record.values_at(*comp_klasses)
-        results << build_record(id, components) if components.size == comp_klasses.size && !components.any?(&:nil?)
+        results << build_record(id, components) unless components.any?(&:nil?)
       end
     end
   end
@@ -42,7 +42,7 @@ class EntityManager
 
     @cache.each do |comp_klasses, results|
       if comp_klasses.include?(klass)
-        results.delete_if{|res| res[:id] == id}
+        results.delete_if{|res| res.id == id}
       end
     end
   end
@@ -57,7 +57,7 @@ class EntityManager
 
     @cache.each do |comp_klasses, results|
       unless (comp_klasses & klasses).empty?
-        results.delete_if{|res| res[:id] == id}
+        results.delete_if{|res| res.id == id}
       end
     end
   end
@@ -73,7 +73,7 @@ class EntityManager
   # bakes in the assumption that we are an ECS and that rows are joined by id
   def find(*klasses)
     cache_hit = @cache[klasses]
-    return cache_hit.dup if cache_hit
+    return cache_hit if cache_hit
 
     id_collection = @comp_to_id.values_at *klasses
     intersecting_ids = id_collection.inject &:&
@@ -91,10 +91,15 @@ class EntityManager
   end
 
   def build_record(id, components)
-    { id: id, components: components }
+    EntityQueryResult.new(id, components)
   end
 
-  # EntityQueryResult = Struct.new :id, :components
+  EntityQueryResult = Struct.new(:id, :components) do
+    def get(klass)
+      components.find{|c|c.class == klass}
+    end
+  end
+
 end
 
 

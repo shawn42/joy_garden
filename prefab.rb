@@ -16,7 +16,7 @@ module Prefab
       10.times do |r|
         plot_id = plots[c][r]
         neighbors = neighbors_for(c,r,plots)
-        entity_manager.add_component(component: PlotComponent.new(nil, neighbors), id: plot_id)
+        entity_manager.add_component(component: Plot.new(nil, neighbors), id: plot_id)
       end
     end
   end
@@ -32,38 +32,38 @@ module Prefab
   end
 
   def self.score(entity_manager:, x:, y:, color:, points:0)
-    entity_manager.add_entity PositionComponent.new(x, y),
-     ColorComponent.new(color), ScoreComponent.new(points)
+    entity_manager.add_entity Position.new(x, y),
+     JoyColor.new(color), Score.new(points)
   end
 
   def self.plant(entity_manager:, x:,y:,color:, mature_age:, growth_speed:, points:)
-    entity_manager.add_entity ColorComponent.new(color),
-      BoxedComponent.new(1, 1),
-      PositionComponent.new(x, y),
-      GrowthComponent.new(1..mature_age, 5_000.0/growth_speed, 2),
-      PointsComponent.new(points),
-      TimerComponent.new(:aged, 1_000, false, AgedEvent)
+    entity_manager.add_entity JoyColor.new(color),
+      Boxed.new(1, 1),
+      Position.new(x, y),
+      Growth.new(1..mature_age, 5_000.0/growth_speed, 2),
+      Points.new(points),
+      Timer.new(:aged, 1_000, false, AgedEvent)
   end
 
   def self.plot(entity_manager:, x:,y:,color:)
-    entity_manager.add_entity ColorComponent.new(color),
-      BoxedComponent.new(11, 11),
-      PositionComponent.new(x, y),
-      ClickableComponent.new,
-      PlantableComponent.new
+    entity_manager.add_entity JoyColor.new(color),
+      Boxed.new(11, 11),
+      Position.new(x, y),
+      Clickable.new,
+      Plantable.new
   end
 
   def self.seed_generator(entity_manager:, x:,y:)
-    entity_manager.add_entity BoxedComponent.new(11, 11),
-      PositionComponent.new(x, y),
-      SeedGeneratorComponent.new
+    entity_manager.add_entity Boxed.new(11, 11),
+      Position.new(x, y),
+      SeedGenerator.new
   end
 
   def self.seed(entity_manager:, seed_definition:, x:, y:, w:, h:)
-    entity_manager.add_entity ColorComponent.new(seed_definition[:color]),
-      BoxedComponent.new(w, h),
-      PositionComponent.new(x, y),
-      SeedDefinitionComponent.new(seed_definition)
+    entity_manager.add_entity JoyColor.new(seed_definition[:color]),
+      Boxed.new(w, h),
+      Position.new(x, y),
+      SeedDefinition.new(seed_definition)
   end
 
 end
